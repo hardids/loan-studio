@@ -1,3 +1,4 @@
+import { CompareTable, numeric, category } from "./CompareTable";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   Activity,
@@ -468,25 +469,36 @@ export function Comparison({
   const change = (x: Loan["change"]) =>
     x ? x.month + "회차부터 " + x.rate + "%" : "없음";
   const data = [
-    ["대출금", won(a.amount), won(b.amount)],
-    ["연 금리", a.rate + "%", b.rate + "%"],
-    ["전체 기간", a.months + "개월", b.months + "개월"],
-    [
+    numeric("대출금", a.amount, b.amount),
+    numeric("연 금리", a.rate, b.rate, "%", "%p"),
+    numeric("전체 기간", a.months, b.months, "개월"),
+    numeric(
       "거치기간",
-      (a.method === "bullet" ? 0 : a.grace) + "개월",
-      (b.method === "bullet" ? 0 : b.grace) + "개월",
-    ],
-    ["상환방식", methods[a.method], methods[b.method]],
-    ["중도상환", extra(a.extra), extra(b.extra)],
-    ["금리 변경", change(a.change), change(b.change)],
-    ["첫 정기 납입액", won(ar[0].regular), won(br[0].regular)],
-    [
-      "가장 많이 지출하는 달",
-      at.peak.month + "회 · " + won(at.peak.total),
-      bt.peak.month + "회 · " + won(bt.peak.total),
-    ],
-    ["총이자", won(at.interest), won(bt.interest)],
-    ["총지출 (수수료 포함)", won(at.total), won(bt.total)],
+      a.method === "bullet" ? 0 : a.grace,
+      b.method === "bullet" ? 0 : b.grace,
+      "개월",
+    ),
+    category("상환방식", methods[a.method], methods[b.method]),
+    category("중도상환 조건", extra(a.extra), extra(b.extra)),
+    category("금리 변경 조건", change(a.change), change(b.change)),
+    ...(a.change && b.change
+      ? [numeric("변경 후 금리", a.change.rate, b.change.rate, "%", "%p")]
+      : []),
+    ...(a.extra || b.extra
+      ? [
+          numeric(
+            "실제 추가 상환원금",
+            ar.reduce((n, r) => n + r.extra, 0),
+            br.reduce((n, r) => n + r.extra, 0),
+          ),
+        ]
+      : []),
+    numeric("첫 정기 납입액", ar[0].regular, br[0].regular),
+    numeric("최대 지출 회차", at.peak.month, bt.peak.month, "회"),
+    numeric("최대 월 지출액", at.peak.total, bt.peak.total),
+    numeric("총이자", at.interest, bt.interest),
+    numeric("총수수료", at.fee, bt.fee),
+    numeric("총지출 (수수료 포함)", at.total, bt.total),
   ];
   return (
     <section className="panel compare" id="compare-results" tabIndex={-1}>
@@ -496,24 +508,7 @@ export function Comparison({
         {diff(br[0].regular - ar[0].regular)}. 총이자는{" "}
         {diff(bt.interest - at.interest)}.
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th>비교 항목</th>
-            <th>A안</th>
-            <th>B안</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map(([key, av, bv]) => (
-            <tr key={key} className={av !== bv ? "different" : ""}>
-              <th>{key}</th>
-              <td>{av}</td>
-              <td>{bv}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <CompareTable rows={data} />
     </section>
   );
 }

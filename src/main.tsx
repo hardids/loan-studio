@@ -1,3 +1,5 @@
+import { Housing } from "./Housing";
+import { homeExample, type Mortgage } from "./mortgage";
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BookOpen, CopyPlus, NotebookPen, Wallet, Coins } from "lucide-react";
@@ -78,11 +80,15 @@ function Budget({ apply }: { apply: (s: Loan) => void }) {
   );
 }
 function App() {
-  const [page, setPage] = useState<"loan" | "budget">("loan"),
+  const [page, setPage] = useState<"loan" | "budget" | "home">("loan"),
     [a, setA] = useState<Loan>({ ...initial }),
     [b, setB] = useState<Loan | null>(null),
     [active, setActive] = useState<"A" | "B">("A"),
     [help, setHelp] = useState(false);
+  const [homes, setHomes] = useState<Record<"A" | "B", Mortgage>>({
+    A: { ...homeExample },
+    B: { ...homeExample },
+  });
   const [ranges, setRanges] = useState({ A: DEFAULT_RANGE, B: DEFAULT_RANGE });
   const current = active === "B" && b ? b : a;
   const ar = evaluate(a),
@@ -114,6 +120,12 @@ function App() {
             >
               월 예산 역산
             </button>
+            <button
+              aria-current={page === "home" ? "page" : undefined}
+              onClick={() => setPage("home")}
+            >
+              주택 매매
+            </button>
           </nav>
           <button
             className="guide"
@@ -129,18 +141,27 @@ function App() {
       <main>
         <div className="intro">
           <div>
-            <h1>{page === "loan" ? "대출 상환 계산기" : "월 예산 역산"}</h1>
+            <h1>
+              {page === "loan"
+                ? "대출 상환 계산기"
+                : page === "home"
+                  ? "주택 매매 한도"
+                  : "월 예산 역산"}
+            </h1>
             <p>
               {page === "loan"
                 ? "대출 조건을 조정하고, 매달 낼 금액과 남은 원금을 확인하세요."
-                : "매달 낼 수 있는 금액으로 대출원금을 계산하세요."}
+                : page === "home"
+                  ? "집값과 소득을 입력하고, 지역별 대출한도와 필요한 자기자금을 확인하세요."
+                  : "매달 낼 수 있는 금액으로 대출원금을 계산하세요."}
             </p>
           </div>
-          {page === "loan" && !b && (
+          {page !== "budget" && !b && (
             <button
               className="secondary"
               onClick={() => {
                 setB(structuredClone(a));
+                setHomes({ ...homes, B: { ...homes.A } });
                 setRanges({ ...ranges, B: ranges.A });
                 setActive("B");
               }}
@@ -164,26 +185,42 @@ function App() {
             </p>
           </section>
         )}
-        {page === "budget" ? (
+        {page !== "budget" && b && (
+          <div className="caseTabs" aria-label="수정할 조건">
+            {(["A", "B"] as const).map((k) => (
+              <button
+                key={k}
+                aria-pressed={active === k}
+                onClick={() => setActive(k)}
+              >
+                {k}안 수정
+              </button>
+            ))}
+            {(page === "home" ||
+              (ar.rows.length > 0 && br && br.rows.length > 0)) && (
+              <a href={page === "home" ? "#home-compare" : "#compare-results"}>
+                비교 결과 보기
+              </a>
+            )}
+          </div>
+        )}
+        {page === "home" ? (
+          <Housing
+            homes={homes}
+            active={active}
+            comparing={!!b}
+            update={(next) => setHomes({ ...homes, [active]: next })}
+            apply={(first, second) => {
+              setA(first);
+              if (second) setB(second);
+              setPage("loan");
+              window.scrollTo(0, 0);
+            }}
+          />
+        ) : page === "budget" ? (
           <Budget apply={apply} />
         ) : (
           <>
-            {b && (
-              <div className="caseTabs" aria-label="수정할 조건">
-                {(["A", "B"] as const).map((k) => (
-                  <button
-                    key={k}
-                    aria-pressed={active === k}
-                    onClick={() => setActive(k)}
-                  >
-                    {k}안 수정
-                  </button>
-                ))}
-                {ar.rows.length > 0 && br && br.rows.length > 0 && (
-                  <a href="#compare-results">비교 결과 보기</a>
-                )}
-              </div>
-            )}
             <div className="workspace simulator">
               {result.rows.length > 0 ? (
                 <Summary s={current} rows={result.rows} />
