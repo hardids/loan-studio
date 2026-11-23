@@ -1,3 +1,4 @@
+import type { HousingAddress } from "./address";
 import { budgetPrincipal, initial, LIMIT, schedule } from "./loan.ts";
 export const areas = {
   metro: "수도권 비규제지역",
@@ -10,6 +11,8 @@ export type Mortgage = {
   price: number;
   appraisal: number | null;
   area: keyof typeof areas;
+  address?: HousingAddress;
+  manualArea?: boolean;
   first: boolean;
   income: number;
   debt: number;
@@ -22,7 +25,7 @@ export const homeExample: Mortgage = {
   sector: "bank",
   price: 800000000,
   appraisal: null,
-  area: "metro",
+  area: "hot",
   first: false,
   income: 70000000,
   debt: 0,
@@ -37,6 +40,8 @@ export function mortgage(s: Mortgage) {
   const range = (n: number, min: number, max: number) =>
     Number.isFinite(n) && n >= min && n <= max;
   const errors: Partial<Record<keyof Mortgage, string>> = {};
+  if (s.address && !s.address.resolved)
+    errors.area = "검색한 주소의 지역을 확인해 주세요.";
   if (!range(s.price, 1, LIMIT) || !Number.isInteger(s.price))
     errors.price = "1원~1조 원의 매매가를 입력해 주세요.";
   if (

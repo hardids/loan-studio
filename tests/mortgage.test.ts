@@ -37,9 +37,10 @@ test("appraised market value drives price bands at both inclusive boundaries", (
   );
 });
 test("existing debt and underwriting stress reduce DSR capacity, actual loan uses contract rate", () => {
-  const fixed = mortgage(homeExample).result!;
+  const dsrLimited = { ...homeExample, area: "metro" as const };
+  const fixed = mortgage(dsrLimited).result!;
   const variable = mortgage({
-    ...homeExample,
+    ...dsrLimited,
     floating: true,
     stress: 3,
   }).result!;

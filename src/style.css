@@ -1295,3 +1295,99 @@ button {
     text-underline-offset: 3px;
   }
 }
+
+.addressField {
+  display: grid;
+  gap: 8px;
+}
+.addressField > label,
+.purchaseRules > b {
+  font-size: 15px;
+  font-weight: 650;
+}
+.addressButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 46px;
+  border: 1px solid #98baa5;
+  background: #f0f7f1;
+  border-radius: 8px;
+  color: #185538;
+  font-weight: 700;
+}
+.addressLabel {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+.addressLabel svg {
+  flex: none;
+}
+.addressField p,
+.purchaseRules p {
+  margin: 2px 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.addressField p b {
+  color: var(--green);
+}
+.zoneLinks {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.zoneLinks a,
+.zoneLinks button,
+.purchaseRules a {
+  font-size: 13px;
+  color: #2c6040;
+  text-underline-offset: 3px;
+}
+.zoneLinks button {
+  text-decoration: underline;
+  padding: 6px 0;
+}
+.lookupDialog {
+  width: min(510px, 96vw);
+  max-width: 96vw;
+  max-height: 94dvh;
+  overflow: auto;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+.lookupDialog::backdrop {
+  background: #102a2366;
+}
+.lookupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.lookupHead button {
+  width: 44px;
+  height: 44px;
+}
+.lookupHost {
+  height: min(480px, 64dvh);
+}
+.lookupDialog p {
+  font-size: 14px;
+  color: var(--muted);
+}
+.purchaseRules {
+  background: #eef6ef;
+  border-radius: 8px;
+  padding: 13px;
+}
+.purchaseRules p {
+  margin: 6px 0;
+}

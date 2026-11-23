@@ -1,3 +1,5 @@
+import { AddressSearch } from "./AddressSearch";
+import { zoneSource } from "./address";
 import { House, Scale, Layers } from "lucide-react";
 import { Field } from "./Inputs";
 import { Heading } from "./Results";
@@ -59,23 +61,7 @@ export function Housing({
         </label>
         {s.appraisal !== null &&
           moneyField("appraisal", "은행 담보평가액 (시가)")}
-        <label className="field">
-          주택 소재 지역
-          <select
-            value={s.area}
-            onChange={(e) => set({ area: e.target.value as Mortgage["area"] })}
-          >
-            {Object.entries(areas).map(([key, name]) => (
-              <option key={key} value={key}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <small>
-            매물 주소의 지정 여부를 확인해 선택하세요. 수도권은
-            서울·인천·경기입니다.
-          </small>
-        </label>
+        <AddressSearch key={active} home={s} change={set} />
         <label className="check">
           <input
             type="checkbox"
@@ -85,9 +71,32 @@ export function Housing({
           생애최초 주택구입 우대 적용
         </label>
         <small>
-          세대 구성원의 주택 보유 이력이 기준입니다. 예외 인정은 은행에
-          확인하세요.
+          세대 구성원의 주택 보유 이력이 기준입니다. 미성년 때 주택 지분을
+          상속받은 경우 등은 금융사 심사를 통해 예외를 인정받을 수 있습니다.
         </small>
+        {s.first &&
+          (!s.address || s.address.resolved) &&
+          s.area !== "local" && (
+            <div className="purchaseRules">
+              <b>생애최초 우대와 함께 적용되는 조건</b>
+              <p>
+                LTV 상한은 70%입니다. 주택 시가 15억 원 이하는 최대 6억 원, 15억
+                초과~25억 원 이하는 4억 원, 25억 원 초과는 2억 원이며 DSR 심사도
+                적용됩니다.
+              </p>
+              <p>
+                만기 최대 30년 · 대출 실행 후 6개월 이내 전입이 원칙입니다. 기존
+                임대차 등 유예 요건은 금융사에 확인하세요.
+              </p>
+              <a
+                href="https://www.fsc.go.kr/po020201/85466"
+                target="_blank"
+                rel="noreferrer"
+              >
+                금융위 적용 기준
+              </a>
+            </div>
+          )}
         <div className="pair">
           {moneyField("income", "인정 연소득")}
           {moneyField("debt", "기존 대출 연간 원리금")}
@@ -199,6 +208,8 @@ export function Housing({
                 까지 상환할 수 있습니다.
               </p>
               <p>
+                예상 한도의 담보 대비 비율{" "}
+                {((r.amount / (s.appraisal ?? s.price)) * 100).toFixed(1)}% ·
                 심사금리 연 {r.assessedRate}% · 예상 DSR {r.usedDsr.toFixed(1)}%
                 · 실제 납입 계산은 연 {s.rate}%
               </p>
@@ -229,9 +240,9 @@ export function Housing({
         <details className="panel homeSources">
           <summary>계산 범위와 공식 근거</summary>
           <p>
-            2026년 11월 23일 자료 확인. 입력한 지역 구분을 기준으로 일반 무주택
-            세대와 생애최초 우대 시나리오를 비교합니다. 소재지와 자격은 직접
-            확인해야 합니다.
+            2026년 11월 23일 국토부 지정 목록과 대조합니다. 서울 전역과 경기
+            15개 지역에 투기과열지구 기준을 적용합니다. 지정·해제 후 경과규정은
+            계약일·신청일에 따라 달라질 수 있습니다.
           </p>
           <p>
             매매가를 담보 시가로 가정하며 은행 평가액을 별도로 입력할 수
@@ -249,6 +260,30 @@ export function Housing({
             있습니다.
           </p>
           <div className="sourceLinks">
+            <a
+              href="https://www.korea.kr/multi/visualNewsView.do?newsId=148970085"
+              target="_blank"
+              rel="noreferrer"
+            >
+              금융위 · 2026년 생애최초 예외 인정
+            </a>
+            <a href={zoneSource} target="_blank" rel="noreferrer">
+              국토부 · 전체 지정 지역 목록
+            </a>
+            <a
+              href="https://www.molit.go.kr/USR/NEWS/m_71/dtl.jsp?id=95092167"
+              target="_blank"
+              rel="noreferrer"
+            >
+              국토부 · 2026년 7월 추가 지정
+            </a>
+            <a
+              href="https://www.fsc.go.kr/po020201/87058"
+              target="_blank"
+              rel="noreferrer"
+            >
+              금융위 · 전입의무와 유예 요건
+            </a>
             <a
               href="https://www.fsc.go.kr/no010101/78134"
               target="_blank"
@@ -296,6 +331,15 @@ export function Housing({
                   homes.A.appraisal ?? homes.A.price,
                   homes.B.appraisal ?? homes.B.price,
                 ),
+                ...(homes.A.address || homes.B.address
+                  ? [
+                      category(
+                        "검색 주소",
+                        homes.A.address?.label ?? "미검색",
+                        homes.B.address?.label ?? "미검색",
+                      ),
+                    ]
+                  : []),
                 category("소재 지역", areas[homes.A.area], areas[homes.B.area]),
                 category(
                   "생애최초 우대",
