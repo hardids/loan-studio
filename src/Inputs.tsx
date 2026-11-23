@@ -43,7 +43,9 @@ export function Field({
     </label>
   );
 }
-const caps = [1e8, 5e8, 1e9];
+export const DEFAULT_RANGE = 3e9;
+const caps = [1e8, 5e8, 1e9, DEFAULT_RANGE];
+type RangeChoice = { chosen: number; setChosen: (upper: number) => void };
 function limitFor(n: number) {
   return (
     caps.find((cap) => cap >= n) ?? Math.ceil(Math.min(n, LIMIT) / 1e9) * 1e9
@@ -53,18 +55,19 @@ function Amount({
   value,
   change,
   error,
-}: {
+  chosen,
+  setChosen,
+}: RangeChoice & {
   value: number;
   change: (n: number) => void;
   error?: string;
 }) {
-  const [chosen, setChosen] = useState(1e8);
   const [empty, setEmpty] = useState(false);
   const [raw, setRaw] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const caret = useRef<number | null>(null);
   const limit = Math.max(chosen, limitFor(Number.isFinite(value) ? value : 0));
-  const step = limit / 100;
+  const step = limit === DEFAULT_RANGE ? 1e6 : limit / 100;
   const percent = Math.min(100, ((value || 0) / limit) * 100);
   useLayoutEffect(() => {
     if (caret.current !== null && input.current) {
@@ -88,7 +91,7 @@ function Amount({
       <div className="fieldtop">
         <label htmlFor="amount">대출금</label>
         <label className="selectShell">
-          범위{" "}
+          조절 범위{" "}
           <select
             aria-label="슬라이더 범위"
             value={limit}
@@ -180,10 +183,12 @@ function Amount({
             }
           }}
         />
-        <div className="ticks">
-          <span>0원</span>
-          <span>{korean(limit / 2)}</span>
-          <span>{korean(limit)}</span>
+        <div className="ticks rangeTicks">
+          {(limit === DEFAULT_RANGE ? [0, 1 / 3, 2 / 3, 1] : [0, 0.5, 1]).map(
+            (fraction) => (
+              <span key={fraction}>{korean(Math.round(limit * fraction))}</span>
+            ),
+          )}
         </div>
       </div>
       <div className="quick">
@@ -214,7 +219,9 @@ export function Inputs({
   s,
   update,
   errors,
-}: {
+  chosen,
+  setChosen,
+}: RangeChoice & {
   s: Loan;
   update: (s: Loan) => void;
   errors: Errors;
@@ -229,6 +236,8 @@ export function Inputs({
   return (
     <>
       <Amount
+        chosen={chosen}
+        setChosen={setChosen}
         value={s.amount}
         change={(amount) => set({ amount })}
         error={errors.amount}

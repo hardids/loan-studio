@@ -1,6 +1,8 @@
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 :root {
   font-family:
-    "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    "Pretendard Variable", "Malgun Gothic", "Apple SD Gothic Neo", system-ui,
+    sans-serif;
   color: #182c35;
   background: #f5f7f5;
   font-synthesis: none;
@@ -117,13 +119,13 @@ main {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 38px 0 26px;
+  padding: 28px 0 23px;
 }
 .intro h1 {
   margin: 0;
-  font-size: clamp(28px, 3.4vw, 44px);
+  font-size: clamp(28px, 3.1vw, 40px);
   line-height: 1.24;
-  letter-spacing: -0.074em;
+  letter-spacing: -0.04em;
 }
 .intro p {
   margin: 10px 0 0;
@@ -157,7 +159,7 @@ main {
 .panel,
 .summary {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 24px;
   background: white;
   min-width: 0;
@@ -179,7 +181,7 @@ main {
 }
 h2 {
   font-size: 19px;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.035em;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -252,7 +254,7 @@ caption {
 .amountInput input {
   font-weight: 750;
   font-size: clamp(22px, 2.3vw, 31px);
-  letter-spacing: -0.045em;
+  letter-spacing: -0.035em;
   padding: 4px 0;
 }
 .amountInput > span {
@@ -274,10 +276,12 @@ caption {
 }
 .rangeWrap {
   position: relative;
-  padding-top: 26px;
-  margin: 18px 4px 13px;
+  padding-top: 14px;
+  margin: 4px 3px 12px;
 }
 .rangeWrap output {
+  opacity: 0;
+  pointer-events: none;
   position: absolute;
   top: 0;
   transform: translateX(-50%);
@@ -481,6 +485,24 @@ small {
   padding: 4px 10px;
   font-size: 12px;
 }
+.composition {
+  height: 5px;
+  background: #548776;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.composition span {
+  display: block;
+  height: 100%;
+  background: #afe4ba;
+}
+.breakdown {
+  display: flex;
+  justify-content: space-between;
+  color: #d6e7dc;
+  font-size: 13px;
+  margin: 8px 0 16px;
+}
 .heroRow {
   display: flex;
   align-items: center;
@@ -497,35 +519,13 @@ small {
   font-size: clamp(28px, 3.25vw, 48px);
   font-weight: 740;
   line-height: 1.2;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.035em;
   overflow-wrap: anywhere;
 }
 .heroValue b {
   font-size: 0.49em;
   margin-left: 5px;
   font-weight: 550;
-}
-.donut {
-  width: 79px;
-  height: 79px;
-  border-radius: 100%;
-  padding: 7px;
-  flex: none;
-}
-.donut div {
-  border-radius: 100%;
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  background: #173f32;
-  height: 100%;
-}
-.donut strong {
-  font-size: 15px;
-}
-.donut small {
-  font-size: 10px;
-  color: #e0eee4;
 }
 .secondaryPay {
   font-size: 13px;
@@ -579,7 +579,7 @@ small {
 .graph svg {
   display: block;
   width: 100%;
-  height: 110px;
+  height: 120px;
   cursor: pointer;
 }
 .chartFoot {
@@ -720,14 +720,6 @@ footer span:first-child {
   .summary {
     padding: 18px;
   }
-  .donut {
-    width: 60px;
-    height: 60px;
-    padding: 5px;
-  }
-  .donut strong {
-    font-size: 12px;
-  }
   .heroValue {
     font-size: 30px;
   }
@@ -793,10 +785,6 @@ footer span:first-child {
   .heroValue {
     font-size: 36px;
   }
-  .donut {
-    width: 69px;
-    height: 69px;
-  }
   .summaryStats dd {
     font-size: 15px;
   }
@@ -828,5 +816,249 @@ footer span:first-child {
   }
   .intro {
     flex-wrap: wrap;
+  }
+}
+
+.simulator {
+  grid-template-areas: "controls summary" "controls chart" "details details";
+  grid-template-rows: auto 1fr auto;
+  align-items: stretch;
+  column-gap: 22px;
+  row-gap: 16px;
+}
+.simulator > .controls {
+  grid-area: controls;
+}
+.simulator > .summary,
+.simulator > .emptyResult {
+  grid-area: summary;
+  align-self: start;
+}
+.simulator > .chart {
+  grid-area: chart;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.simulator > .detailsStack,
+.simulator > .compare {
+  grid-area: details;
+}
+.detailsStack {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.simulator .plot {
+  margin: 21px 0 18px;
+}
+.simulator .schedule {
+  padding-bottom: 12px;
+}
+.heroRow {
+  margin: 12px 0 22px;
+}
+.summaryTitle > span:first-child {
+  font-size: 16px;
+  color: #e2f3e9;
+}
+.heroValue {
+  font-weight: 680;
+}
+.summaryStats {
+  grid-template-columns: 1fr 0.78fr 1.25fr;
+}
+.rangeWrap:focus-within output,
+.rangeWrap:active output {
+  opacity: 1;
+}
+.range:focus-visible {
+  outline: none;
+}
+.range:focus-visible::-webkit-slider-thumb {
+  outline: 3px solid #4c896b;
+  outline-offset: 3px;
+}
+.range:focus-visible::-moz-range-thumb {
+  outline: 3px solid #4c896b;
+  outline-offset: 3px;
+}
+.rangeWrap output {
+  top: 0;
+}
+.rangeTicks span {
+  position: relative;
+}
+.rangeTicks span:before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 1px;
+  height: 3px;
+  background: #a4b7ac;
+}
+.rangeTicks span:first-child:before {
+  left: 0;
+}
+.rangeTicks span:last-child:before {
+  left: auto;
+  right: 0;
+}
+.quick button,
+.segments button,
+.secondary,
+.yearRow {
+  min-height: 40px;
+}
+.krAmount {
+  font-weight: 550;
+}
+.selectShell {
+  min-height: 29px;
+  padding: 2px 8px;
+  background: #eff4f0;
+  color: #3c5b49;
+}
+.selectShell select {
+  font-weight: 650;
+  padding: 3px;
+}
+.segments button[aria-pressed="true"] {
+  background: #fff;
+  color: #155d3b;
+  box-shadow: inset 0 0 0 1px #adcbb7;
+}
+select,
+button {
+  touch-action: manipulation;
+}
+.advanced summary {
+  min-height: 32px;
+}
+.advanced[open] summary > svg:last-child,
+.yearRow[aria-expanded="true"] > svg {
+  transform: rotate(180deg);
+}
+.tableScroll thead th {
+  white-space: nowrap;
+}
+.tableScroll :is(th, td):first-child {
+  position: sticky;
+  left: 0;
+  background: #f3f7f4;
+}
+.heroValue,
+.summaryStats dd,
+.amountInput input {
+  font-variant-numeric: tabular-nums;
+}
+.liveAmount {
+  display: none;
+}
+@media (max-width: 700px) {
+  .simulator {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "summary" "controls" "chart" "details";
+    grid-template-rows: auto;
+    gap: 12px;
+  }
+  .simulator > .controls {
+    padding: 19px;
+  }
+  .intro {
+    padding: 22px 0 15px;
+    align-items: center;
+  }
+  .intro p {
+    display: none;
+  }
+  .simulator > .summary {
+    padding: 18px 20px;
+  }
+  .heroRow {
+    margin: 8px 0 14px;
+  }
+  .heroValue {
+    font-size: clamp(31px, 9.5vw, 40px);
+  }
+  .breakdown {
+    margin: 6px 0 11px;
+    font-size: 12px;
+  }
+  .summaryStats {
+    padding-top: 11px;
+  }
+  .amount {
+    margin-top: 16px;
+  }
+  .basefields {
+    margin: 16px 0;
+    padding-top: 16px;
+  }
+  .quick button,
+  .segments button,
+  .guide,
+  .yearRow {
+    min-height: 44px;
+  }
+  .advanced summary {
+    min-height: 40px;
+  }
+  .liveAmount {
+    display: flex;
+    position: fixed;
+    z-index: 5;
+    top: 0;
+    left: 0;
+    right: 0;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px max(18px, env(safe-area-inset-right)) 13px
+      max(18px, env(safe-area-inset-left));
+    background: #173f32;
+    color: white;
+    box-shadow: 0 4px 12px #102e2224;
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .liveAmount b {
+    font-size: 19px;
+  }
+  html {
+    scroll-padding-top: 58px;
+  }
+  .simulator {
+    overflow-anchor: none;
+  }
+  .summaryStats dd {
+    font-size: clamp(12px, 3.6vw, 16px);
+  }
+}
+
+.caseTabs {
+  width: auto;
+  align-items: center;
+}
+.caseTabs button {
+  flex: 0 0 auto;
+  padding: 9px 17px;
+}
+.caseTabs a {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green);
+  text-underline-offset: 3px;
+  padding: 10px 0;
+}
+.simulator > .chart {
+  align-self: start;
+  height: 100%;
+  max-height: 360px;
+}
+@media (min-width: 701px) {
+  .simulator .graph svg {
+    height: clamp(132px, 12vw, 175px);
   }
 }

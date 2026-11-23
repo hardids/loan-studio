@@ -7,6 +7,8 @@ test("precise amount, slider range and independent comparison", async ({
 }) => {
   const amount = page.getByLabel("대출금", { exact: true });
   const slider = page.getByRole("slider");
+  await expect(slider).toHaveAttribute("max", "3000000000");
+  await expect(amount).toHaveValue("30,000,000");
   await slider.focus();
   await slider.press("ArrowRight");
   await expect(amount).toHaveValue("31,000,000");
@@ -61,4 +63,28 @@ test("long schedule, combined events and budget transfer", async ({ page }) => {
   );
   await expect(page.locator(".heroValue")).toHaveText("1,000,000원");
   await expect(page.locator(".effect")).toHaveCount(0);
+});
+
+test("30억 양 끝과 모바일 결과 읽기 순서", async ({ page }, testInfo) => {
+  const slider = page.getByRole("slider");
+  const amount = page.getByLabel("대출금", { exact: true });
+  if (testInfo.project.name === "mobile") {
+    await expect(page.locator(".heroValue")).toBeInViewport();
+    const summary = await page.locator(".summary").boundingBox(),
+      controls = await page.locator(".controls").boundingBox();
+    expect(summary!.y + summary!.height).toBeLessThanOrEqual(controls!.y);
+  }
+  await slider.press("End");
+  await expect(amount).toHaveValue("3,000,000,000");
+  await slider.press("Home");
+  await expect(page.locator(".emptyResult")).toBeVisible();
+  await slider.press("ArrowRight");
+  await expect(amount).toHaveValue("1,000,000");
+  await amount.fill("3001234567");
+  await expect(slider).toHaveAttribute("max", "4000000000");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

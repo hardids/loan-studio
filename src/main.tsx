@@ -1,8 +1,8 @@
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BookOpen, CopyPlus, NotebookPen, Wallet, Coins } from "lucide-react";
-import { Inputs, Field } from "./Inputs";
-import { Comparison, Results, Heading } from "./Results";
+import { Inputs, Field, DEFAULT_RANGE } from "./Inputs";
+import { Comparison, Results, Heading, Summary } from "./Results";
 import {
   budgetPrincipal,
   evaluate,
@@ -83,6 +83,7 @@ function App() {
     [b, setB] = useState<Loan | null>(null),
     [active, setActive] = useState<"A" | "B">("A"),
     [help, setHelp] = useState(false);
+  const [ranges, setRanges] = useState({ A: DEFAULT_RANGE, B: DEFAULT_RANGE });
   const current = active === "B" && b ? b : a;
   const ar = evaluate(a),
     br = b ? evaluate(b) : null;
@@ -116,6 +117,7 @@ function App() {
           </nav>
           <button
             className="guide"
+            aria-label="계산 기준"
             aria-expanded={help}
             onClick={() => setHelp(!help)}
           >
@@ -139,6 +141,7 @@ function App() {
               className="secondary"
               onClick={() => {
                 setB(structuredClone(a));
+                setRanges({ ...ranges, B: ranges.A });
                 setActive("B");
               }}
             >
@@ -176,9 +179,22 @@ function App() {
                     {k}안 수정
                   </button>
                 ))}
+                {ar.rows.length > 0 && br && br.rows.length > 0 && (
+                  <a href="#compare-results">비교 결과 보기</a>
+                )}
               </div>
             )}
-            <div className="workspace">
+            <div className="workspace simulator">
+              {result.rows.length > 0 ? (
+                <Summary s={current} rows={result.rows} />
+              ) : (
+                <section className="panel emptyResult">
+                  <Wallet size={24} />
+                  <h2>
+                    {result.errors.amount ?? "입력 조건을 확인해 주세요."}
+                  </h2>
+                </section>
+              )}
               <section className="panel controls">
                 <div className="panelHead">
                   <Heading icon={NotebookPen}>대출 조건</Heading>
@@ -186,22 +202,24 @@ function App() {
                 </div>
                 <Inputs
                   key={active}
+                  chosen={ranges[active]}
+                  setChosen={(upper) =>
+                    setRanges({ ...ranges, [active]: upper })
+                  }
                   s={current}
                   update={active === "A" ? setA : setB}
                   errors={result.errors}
                 />
               </section>
-              <div className="output">
-                {b && br && (
-                  <Comparison a={a} b={b} ar={ar.rows} br={br.rows} />
-                )}
-                <Results
-                  key={active}
-                  s={current}
-                  rows={result.rows}
-                  invalid={result.errors.amount ?? "입력 조건을 확인해 주세요."}
-                />
-              </div>
+              <Results
+                key={active}
+                s={current}
+                rows={result.rows}
+                comparison={
+                  b &&
+                  br && <Comparison a={a} b={b} ar={ar.rows} br={br.rows} />
+                }
+              />
             </div>
           </>
         )}

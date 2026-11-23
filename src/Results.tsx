@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   Activity,
   CalendarDays,
@@ -32,7 +32,31 @@ export function Heading({
     </h2>
   );
 }
-function Summary({ s, rows }: { s: Loan; rows: Row[] }) {
+export function Summary({ s, rows }: { s: Loan; rows: Row[] }) {
+  const summaryRef = useRef<HTMLElement>(null);
+  const [editingBelow, setEditingBelow] = useState(false);
+  useEffect(() => {
+    const summary = summaryRef.current,
+      form = summary?.parentElement?.querySelector(".controls");
+    if (!summary || !form) return;
+    const check = () =>
+      setEditingBelow(
+        summary.getBoundingClientRect().bottom <= 0 &&
+          form.getBoundingClientRect().bottom > 70,
+      );
+    const observer = new IntersectionObserver(check, {
+      rootMargin: "-1px 0px -70px 0px",
+      threshold: [0, 1],
+    });
+    observer.observe(summary);
+    observer.observe(form);
+    window.addEventListener("scroll", check, { passive: true });
+    check();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", check);
+    };
+  }, []);
   const sum = totals(rows),
     first = rows[0],
     last = rows.at(-1)!;
@@ -52,17 +76,24 @@ function Summary({ s, rows }: { s: Loan; rows: Row[] }) {
       ? undefined
       : last;
   return (
-    <section className="summary">
+    <section className="summary" ref={summaryRef} aria-label="상환 요약">
+      {editingBelow && (
+        <div className="liveAmount">
+          <span>{label}</span>
+          <b>{won(main)}</b>
+        </div>
+      )}
       <div className="summaryTitle">
         <span>
           <Wallet size={17} />
-          상환 요약
+          {label}
         </span>
-        <span className="pill">{methods[s.method]}상환</span>
+        <span className="pill">
+          {s.months}개월 · {methods[s.method]}
+        </span>
       </div>
       <div className="heroRow">
         <div>
-          <div className="heroLabel">{label}</div>
           <div className="heroValue">
             {fmt(main)}
             <b>원</b>
@@ -74,22 +105,13 @@ function Summary({ s, rows }: { s: Loan; rows: Row[] }) {
             </div>
           )}
         </div>
-        <div
-          className="donut"
-          style={{
-            background:
-              "conic-gradient(#a7e3b4 0 " +
-              share +
-              "%,#4a7361 " +
-              share +
-              "% 100%)",
-          }}
-        >
-          <div>
-            <strong>{share}%</strong>
-            <small>원금 비중</small>
-          </div>
-        </div>
+      </div>
+      <div className="composition">
+        <span style={{ width: share + "%" }} />
+      </div>
+      <div className="breakdown">
+        <span>원금 {share}%</span>
+        <span>이자·수수료 {Number((100 - share).toFixed(1))}%</span>
       </div>
       <dl className="summaryStats">
         <div>
@@ -310,21 +332,16 @@ function cLabel(s: Loan, m: number) {
 export function Results({
   s,
   rows,
-  invalid,
+  comparison,
 }: {
   s: Loan;
   rows: Row[];
-  invalid: string;
+  comparison: React.ReactNode;
 }) {
   const [year, setYear] = useState(0);
   const id = useId();
   if (!rows.length)
-    return (
-      <section className="panel emptyResult">
-        <Wallet size={30} />
-        <h2>{invalid}</h2>
-      </section>
-    );
+    return comparison ? <div className="detailsStack">{comparison}</div> : null;
   const max = Math.ceil(rows.length / 12);
   function pick(n: number) {
     setYear(n);
@@ -334,82 +351,84 @@ export function Results({
   }
   return (
     <>
-      <Summary s={s} rows={rows} />
       <Chart s={s} rows={rows} pick={pick} />
-      <Events s={s} rows={rows} />
-      <section className="panel schedule" id={id}>
-        <div className="panelHead">
-          <Heading icon={CalendarDays}>월별 상환표</Heading>
-          <span className="meta">총 {rows.length}회</span>
-        </div>
-        {Array.from({ length: max }, (_, i) => {
-          const group = rows.slice(i * 12, (i + 1) * 12);
-          return (
-            <div key={i}>
-              <button
-                className="yearRow"
-                aria-expanded={year === i + 1}
-                onClick={() => setYear(year === i + 1 ? 0 : i + 1)}
-              >
-                <b>{i + 1}년차</b>
-                <span>
-                  {group[0].month}~{group.at(-1)!.month}회차
-                </span>
-                <ChevronDown size={15} />
-              </button>
-              {year === i + 1 && (
-                <div
-                  className="tableScroll"
-                  tabIndex={0}
-                  aria-label="월별 상환표 가로 스크롤"
+      <div className="detailsStack">
+        {comparison}
+        <Events s={s} rows={rows} />
+        <section className="panel schedule" id={id}>
+          <div className="panelHead">
+            <Heading icon={CalendarDays}>월별 상환표</Heading>
+            <span className="meta">총 {rows.length}회</span>
+          </div>
+          {Array.from({ length: max }, (_, i) => {
+            const group = rows.slice(i * 12, (i + 1) * 12);
+            return (
+              <div key={i}>
+                <button
+                  className="yearRow"
+                  aria-expanded={year === i + 1}
+                  onClick={() => setYear(year === i + 1 ? 0 : i + 1)}
                 >
-                  <table>
-                    <caption>단위 원</caption>
-                    <thead>
-                      <tr>
-                        {[
-                          "회차",
-                          "정기 납입액",
-                          "정기 상환원금",
-                          "이자",
-                          "추가 상환원금",
-                          "수수료",
-                          "이달 총지출",
-                          "남은 원금",
-                        ].map((h) => (
-                          <th key={h}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.map((r) => (
-                        <tr key={r.month}>
+                  <b>{i + 1}년차</b>
+                  <span>
+                    {group[0].month}~{group.at(-1)!.month}회차
+                  </span>
+                  <ChevronDown size={15} />
+                </button>
+                {year === i + 1 && (
+                  <div
+                    className="tableScroll"
+                    tabIndex={0}
+                    aria-label="월별 상환표 가로 스크롤"
+                  >
+                    <table>
+                      <caption>단위 원</caption>
+                      <thead>
+                        <tr>
                           {[
-                            r.month,
-                            r.regular,
-                            r.principal,
-                            r.interest,
-                            r.extra,
-                            r.fee,
-                            r.total,
-                            r.balance,
-                          ].map((v, k) => (
-                            <td key={k}>{fmt(v)}</td>
+                            "회차",
+                            "정기 납입액",
+                            "정기 상환원금",
+                            "이자",
+                            "추가 상환원금",
+                            "수수료",
+                            "이달 총지출",
+                            "남은 원금",
+                          ].map((h) => (
+                            <th key={h}>{h}</th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </section>
-      <p className="note">
-        <Info size={15} />월 단위 추정값으로, 실제 납입액은 금융기관의 일할
-        계산과 원 단위 처리에 따라 달라질 수 있습니다.
-      </p>
+                      </thead>
+                      <tbody>
+                        {group.map((r) => (
+                          <tr key={r.month}>
+                            {[
+                              r.month,
+                              r.regular,
+                              r.principal,
+                              r.interest,
+                              r.extra,
+                              r.fee,
+                              r.total,
+                              r.balance,
+                            ].map((v, k) => (
+                              <td key={k}>{fmt(v)}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </section>
+        <p className="note">
+          <Info size={15} />월 단위 추정값으로, 실제 납입액은 금융기관의 일할
+          계산과 원 단위 처리에 따라 달라질 수 있습니다.
+        </p>
+      </div>
     </>
   );
 }
@@ -470,7 +489,7 @@ export function Comparison({
     ["총지출 (수수료 포함)", won(at.total), won(bt.total)],
   ];
   return (
-    <section className="panel compare">
+    <section className="panel compare" id="compare-results" tabIndex={-1}>
       <Heading icon={Layers}>조건 비교</Heading>
       <p>
         B안의 {uniform ? "월" : "첫 달"} 정기 납입액은 A안 대비{" "}
